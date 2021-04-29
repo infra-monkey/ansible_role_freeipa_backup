@@ -1,0 +1,9 @@
+[Unit]
+Description=Run daily backup of FreeIPA
+
+[Timer]
+{{ freeipa_backup_periodicity }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target
