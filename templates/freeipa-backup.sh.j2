@@ -10,19 +10,20 @@
 
 function load_variables () {
 BACKUP_DIR={{ freeipa_backup_dir }}
+BACKUP_OPTIONS={{ freeipa_backup_options }}
+MOUNT_TYPE={{ freeipa_backup_mount_type }}
 DATE=$(date +%F)
 BACKUP_BASEDIR="$(hostname -f)/freeipa/"
-BACKUP_LOCALDIR=/tmp/backup
+BACKUP_LOCALDIR=/var/lib/ipa/backup
 BACKUP_TARGETDIR=${BACKUP_DIR}/${BACKUP_BASEDIR}/${DATE}
 
 }
 
 function show_variables () {
-echo "DB_NAME=${DB_NAME}"
-echo "POSTGRESQL_HOST=${POSTGRESQL_HOST}"
-echo "OPTIONS=${OPTIONS}"
 echo "NB_BACKUPS=${NB_BACKUPS}"
 echo "BACKUP_DIR=${BACKUP_DIR}"
+echo "MOUNT_TYPE=${MOUNT_TYPE}"
+echo "BACKUP_OPTIONS=${BACKUP_OPTIONS}"
 echo "DATE=${DATE}"
 echo "BACKUP_BASEDIR=${BACKUP_BASEDIR}"
 echo "BACKUP_LOCALDIR=${BACKUP_LOCALDIR}"
@@ -51,8 +52,13 @@ function exit_script () {
 }
 
 function remove_oldest_backup () {
-    DIR_NAME=$(ls -t1 ${BACKUP_DIR}/${BACKUP_BASEDIR} | tail -1)
-    rm -rf ${BACKUP_DIR}/${BACKUP_BASEDIR}/${DIR_NAME}
+    if [ "${MOUNT_TYPE}" != "local" ] then
+        DIR_NAME=$(ls -t1 ${BACKUP_DIR}/${BACKUP_BASEDIR} | tail -1)
+        rm -rf ${BACKUP_DIR}/${BACKUP_BASEDIR}/${DIR_NAME}
+    else
+        DIR_NAME=$(ls -t1 ${BACKUP_DIR} | tail -1)
+        rm -rf ${BACKUP_DIR}/${DIR_NAME}
+    fi
     return 0
 }
 
@@ -63,12 +69,16 @@ function create_backup_dir () {
 
 function copy_backup () {
     ERR_CODE=4
-    create_backup_dir
-    NB_ARCHIVES=$(ls -l ${BACKUP_DIR}/${BACKUP_BASEDIR} | wc -l)
-#     mkdir -p ${BACKUP_TARGETDIR} || return ${ERR_CODE}
-    echo  "copy dump at ${BACKUP_TARGETDIR}"
-    cp -rf ${BACKUP_LOCALDIR}/* ${BACKUP_TARGETDIR} || return ${ERR_CODE}
-    rm -rf ${BACKUP_LOCALDIR}/*
+
+    if [ "${MOUNT_TYPE}" != "local" ] then
+        create_backup_dir
+        NB_ARCHIVES=$(ls -1 ${BACKUP_DIR}/${BACKUP_BASEDIR} | wc -l)
+        echo  "copy backup at ${BACKUP_TARGETDIR}"
+        cp -rf ${BACKUP_LOCALDIR}/* ${BACKUP_TARGETDIR} || return ${ERR_CODE}
+        rm -rf ${BACKUP_LOCALDIR}/*
+    else
+        NB_ARCHIVES=$(ls -1 ${BACKUP_DIR} | wc -l)
+    fi
     [ ${NB_ARCHIVES} -gt ${NB_BACKUPS} ] && remove_oldest_backup
     return 0
     
@@ -76,12 +86,13 @@ function copy_backup () {
 
 function perform_backup () {
     ERR_CODE=3
-    mkdir -p ${BACKUP_LOCALDIR}
-    echo "rm -rf ${BACKUP_LOCALDIR}/*"
-    rm -rf ${BACKUP_LOCALDIR}/*
-    echo "starting pg_dump of database ${DB_NAME}"
-    /usr/bin/pg_dump ${OPTIONS} --host=${POSTGRESQL_HOST} --port=${POSTGRESQL_PORT} --username=${DB_USERNAME} -w ${DB_NAME} > ${BACKUP_LOCALDIR}/pg_dump_${DB_NAME}.sql
-    echo "end of pg_dump"
+    if [ "${MOUNT_TYPE}" != "local" ] then
+        echo "rm -rf /var/lib/ipa/backup/*"
+        rm -rf /var/lib/ipa/backup/*
+    fi
+    echo "starting freeipa backup full"
+    /sbin/ipa-backup ${BACKUP_OPTIONS}
+    echo "end of freeipa backup"
     return 0
 }
 
@@ -89,8 +100,8 @@ function perform_backup () {
 # MAIN PART
 #
 
-CONF_FILE=${1}
-load_variables ${CONF_FILE}
+[ ${UID} -ne 0 ] && exit_script 1
+load_variables
 show_variables
 perform_backup || exit_script $?
 copy_backup ||  exit_script $?
