@@ -56,8 +56,8 @@ function remove_oldest_backup () {
         DIR_NAME=$(ls -t1 ${BACKUP_DIR}/${BACKUP_BASEDIR} | tail -1)
         rm -rf ${BACKUP_DIR}/${BACKUP_BASEDIR}/${DIR_NAME}
     else
-        DIR_NAME=$(ls -t1 ${BACKUP_DIR} | tail -1)
-        rm -rf ${BACKUP_DIR}/${DIR_NAME}
+        DIR_NAME=$(ls -t1 ${BACKUP_LOCALDIR} | tail -1)
+        rm -rf ${BACKUP_LOCALDIR}/${DIR_NAME}
     fi
     return 0
 }
