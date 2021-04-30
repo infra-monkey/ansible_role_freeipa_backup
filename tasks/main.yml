@@ -20,7 +20,7 @@
   ansible.builtin.package:
     name: "{{ nfs_deps }}"
     state: present
-  when: backup_mount_type == "nfs"
+  when: freeipa_backup_mount_type == "nfs"
 
 - name: "Ensure the backup mount is defined"
   ansible.posix.mount:
