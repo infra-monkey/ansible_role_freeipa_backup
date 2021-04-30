@@ -77,7 +77,7 @@ function copy_backup () {
         cp -rf ${BACKUP_LOCALDIR}/* ${BACKUP_TARGETDIR} || return ${ERR_CODE}
         rm -rf ${BACKUP_LOCALDIR}/*
     else
-        NB_ARCHIVES=$(ls -1 ${BACKUP_DIR} | wc -l)
+        NB_ARCHIVES=$(ls -1 ${BACKUP_LOCALDIR} | wc -l)
     fi
     [ ${NB_ARCHIVES} -gt ${NB_BACKUPS} ] && remove_oldest_backup
     return 0
