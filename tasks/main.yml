@@ -36,8 +36,8 @@
   ansible.builtin.file:
     path: "{{ freeipa_backup_dir }}/{{ ansible_fqdn }}"
     state: directory
-    owner: pgbackup
-    group: pgbackup
+    owner: root
+    group: root
     mode: '0755'
 
 - name: "Copy the backup script"
