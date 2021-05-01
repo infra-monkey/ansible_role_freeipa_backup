@@ -12,8 +12,9 @@ function load_variables () {
 BACKUP_DIR={{ freeipa_backup_dir }}
 BACKUP_OPTIONS={{ freeipa_backup_options }}
 MOUNT_TYPE={{ freeipa_backup_mount_type }}
+NB_BACKUPS={{ freeipa_backup_retention }}
 DATE=$(date +%F)
-BACKUP_BASEDIR="$(hostname -f)/freeipa/"
+BACKUP_BASEDIR="$(hostname -f)/freeipa"
 BACKUP_LOCALDIR=/var/lib/ipa/backup
 BACKUP_TARGETDIR=${BACKUP_DIR}/${BACKUP_BASEDIR}/${DATE}
 
@@ -52,7 +53,7 @@ function exit_script () {
 }
 
 function remove_oldest_backup () {
-    if [ "${MOUNT_TYPE}" != "local" ] then
+    if [ "${MOUNT_TYPE}" != "local" ] ; then
         DIR_NAME=$(ls -t1 ${BACKUP_DIR}/${BACKUP_BASEDIR} | tail -1)
         rm -rf ${BACKUP_DIR}/${BACKUP_BASEDIR}/${DIR_NAME}
     else
@@ -70,7 +71,7 @@ function create_backup_dir () {
 function copy_backup () {
     ERR_CODE=4
 
-    if [ "${MOUNT_TYPE}" != "local" ] then
+    if [ "${MOUNT_TYPE}" != "local" ] ; then
         create_backup_dir
         NB_ARCHIVES=$(ls -1 ${BACKUP_DIR}/${BACKUP_BASEDIR} | wc -l)
         echo  "copy backup at ${BACKUP_TARGETDIR}"
@@ -86,7 +87,7 @@ function copy_backup () {
 
 function perform_backup () {
     ERR_CODE=3
-    if [ "${MOUNT_TYPE}" != "local" ] then
+    if [ "${MOUNT_TYPE}" != "local" ] ; then
         echo "rm -rf /var/lib/ipa/backup/*"
         rm -rf /var/lib/ipa/backup/*
     fi
