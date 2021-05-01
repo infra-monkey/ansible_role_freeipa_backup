@@ -1,0 +1,108 @@
+#!/bin/bash
+#
+# Backup script for Postgresql server.
+# 
+# Nighlty backup , full backup
+# Executed as root
+# Keeps $NB_BACKUPS in archive.
+# Stores the backups on nfs share, in a hostname/date subdir
+#
+
+function load_variables () {
+BACKUP_DIR={{ freeipa_backup_dir }}
+BACKUP_OPTIONS={{ freeipa_backup_options }}
+MOUNT_TYPE={{ freeipa_backup_mount_type }}
+NB_BACKUPS={{ freeipa_backup_retention }}
+DATE=$(date +%F)
+BACKUP_BASEDIR="$(hostname -f)/freeipa"
+BACKUP_LOCALDIR=/var/lib/ipa/backup
+BACKUP_TARGETDIR=${BACKUP_DIR}/${BACKUP_BASEDIR}/${DATE}
+
+}
+
+function show_variables () {
+echo "NB_BACKUPS=${NB_BACKUPS}"
+echo "BACKUP_DIR=${BACKUP_DIR}"
+echo "MOUNT_TYPE=${MOUNT_TYPE}"
+echo "BACKUP_OPTIONS=${BACKUP_OPTIONS}"
+echo "DATE=${DATE}"
+echo "BACKUP_BASEDIR=${BACKUP_BASEDIR}"
+echo "BACKUP_LOCALDIR=${BACKUP_LOCALDIR}"
+echo "BACKUP_TARGETDIR=${BACKUP_TARGETDIR}"
+}
+
+function exit_script () {
+    ERR_CODE=${1}
+    case ${ERR_CODE} in
+        1)
+            EXIT_MSG="This script must be run as root"
+            ;;
+        2)
+            EXIT_MSG="Error during backup operation."
+            ;;
+        3)
+            EXIT_MSG="Error while copying backup files."
+            ;;
+        *)
+            EXIT_MSG="Unkonwn error."
+            ;;
+    esac
+    echo ${EXIT_MSG}
+    #${ROCKETCHAT_SCRIPT} ${ROCKETCHAT_TOKEN} "FAILED" "${0} Failed with error ${EXIT_CODE}\n${EXIT_MSG}"
+    exit ${ERR_CODE}
+}
+
+function remove_oldest_backup () {
+    if [ "${MOUNT_TYPE}" != "local" ] ; then
+        DIR_NAME=$(ls -t1 ${BACKUP_DIR}/${BACKUP_BASEDIR} | tail -1)
+        rm -rf ${BACKUP_DIR}/${BACKUP_BASEDIR}/${DIR_NAME}
+    else
+        DIR_NAME=$(ls -t1 ${BACKUP_LOCALDIR} | tail -1)
+        rm -rf ${BACKUP_LOCALDIR}/${DIR_NAME}
+    fi
+    return 0
+}
+
+function create_backup_dir () {
+    mkdir -p ${BACKUP_TARGETDIR}
+    return 0
+}
+
+function copy_backup () {
+    ERR_CODE=4
+
+    if [ "${MOUNT_TYPE}" != "local" ] ; then
+        create_backup_dir
+        NB_ARCHIVES=$(ls -1 ${BACKUP_DIR}/${BACKUP_BASEDIR} | wc -l)
+        echo  "copy backup at ${BACKUP_TARGETDIR}"
+        cp -rf ${BACKUP_LOCALDIR}/* ${BACKUP_TARGETDIR} || return ${ERR_CODE}
+        rm -rf ${BACKUP_LOCALDIR}/*
+    else
+        NB_ARCHIVES=$(ls -1 ${BACKUP_LOCALDIR} | wc -l)
+    fi
+    [ ${NB_ARCHIVES} -gt ${NB_BACKUPS} ] && remove_oldest_backup
+    return 0
+    
+}
+
+function perform_backup () {
+    ERR_CODE=3
+    if [ "${MOUNT_TYPE}" != "local" ] ; then
+        echo "rm -rf /var/lib/ipa/backup/*"
+        rm -rf /var/lib/ipa/backup/*
+    fi
+    echo "starting freeipa backup full"
+    /sbin/ipa-backup ${BACKUP_OPTIONS}
+    echo "end of freeipa backup"
+    return 0
+}
+
+#
+# MAIN PART
+#
+
+[ ${UID} -ne 0 ] && exit_script 1
+load_variables
+show_variables
+perform_backup || exit_script $?
+copy_backup ||  exit_script $?

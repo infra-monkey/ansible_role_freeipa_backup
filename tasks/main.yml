@@ -1,2 +1,73 @@
 ---
+- name: "Include os specific variables"
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: "Ensure nfs dependencies are installed"
+  ansible.builtin.package:
+    name: "{{ deplist }}"
+    state: present
+  when: deplist is defined
+
+- name: "Ensure the target directory exists (can be used as mount point)"
+  ansible.builtin.file:
+    path: "{{ freeipa_backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: "Ensure nfs dependencies are installed"
+  ansible.builtin.package:
+    name: "{{ nfs_deps }}"
+    state: present
+  when: freeipa_backup_mount_type == "nfs"
+
+- name: "Ensure the backup mount is defined"
+  ansible.posix.mount:
+    src: "{{ freeipa_backup_remote_mount_path }}"
+    path: "{{ freeipa_backup_dir }}"
+    opts: rw,noatime
+    state: mounted
+    fstype: "{{ freeipa_backup_mount_type }}"
+    boot: true
+  when: freeipa_backup_mount_type == "nfs"
+
+- name: "Ensure the target directory for host exists and is writable"
+  ansible.builtin.file:
+    path: "{{ freeipa_backup_dir }}/{{ ansible_fqdn }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: "Copy the backup script"
+  ansible.builtin.template:
+    src: freeipa-backup.sh.j2
+    dest: /usr/local/bin/freeipa-backup.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: "Create systemd service for the backup"
+  ansible.builtin.template:
+    src: freeipa-backup.service.j2
+    dest: "/etc/systemd/system/freeipa-backup.service"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "Create systemd timer for the backup"
+  ansible.builtin.template:
+    src: freeipa-backup.timer.j2
+    dest: "/etc/systemd/system/freeipa-backup.timer"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "Ensure systemd timers are enabled"
+  ansible.builtin.systemd:
+    name: freeipa-backup.timer
+    state: started
+    enabled: true
+    daemon_reload: true
 ...

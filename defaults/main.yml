@@ -1,0 +1,8 @@
+---
+freeipa_backup_options: ""
+freeipa_backup_mount_type: "local"
+freeipa_backup_dir: "/var/lib/ipa/backup"
+freeipa_backup_remote_mount_path: "nfsserver:/path/to/mount"
+freeipa_backup_retention: "14"
+freeipa_backup_periodicity: "OnCalendar=*-*-* 22:00:00"
+...
