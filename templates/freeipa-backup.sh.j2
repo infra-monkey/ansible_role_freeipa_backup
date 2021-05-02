@@ -109,4 +109,5 @@ load_variables
 show_variables
 perform_backup || exit_script $?
 copy_backup ||  exit_script $?
-[ "WEBHOOK_NOTIFY" == "true" ] && ${WEBHOOK_SCRIPT} ${WEBHOOK_URL} ":white_check_mark: SUCCESS: ${0} on $(hostname -f) performed successfully"
+[ "${WEBHOOK_NOTIFY}" == "true" ] && ${WEBHOOK_SCRIPT} ${WEBHOOK_URL} ":white_check_mark: SUCCESS: ${0} on $(hostname -f) performed successfully"
+exit 0
