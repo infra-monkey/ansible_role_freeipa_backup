@@ -17,6 +17,5 @@ galaxy_info:
         - stretch
         - buster
   galaxy_tags: []
-dependencies:
-  - infra_monkey.webhook_notify
+dependencies: []
 ...
