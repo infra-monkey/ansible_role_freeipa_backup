@@ -16,6 +16,10 @@ This role requires root permissions. It must be called as root. This needs to be
 | freeipa_backup_dir | string | no | `/tmp/freeipa_backup` | Path where the backups are sent. Is the mount point in case of network storage. |
 | freeipa_backup_remote_mount_path | string | no | `nfsserver:/path/to/mount` | The remote path of the mount command. Depends on the protocol. |
 | freeipa_backup_options | string | no | `""` | Options to pass to `ipa-backup`, ex: "--data --online" |
+| freeipa_backup_webhook_notification | boolean | no | `false` | Send the result of the backup at the end of execution |
+
+
+Check variables for webhook notifications at [infra_monkey.webhook_notify](https://github.com/infra-monkey/ansible_role_webhook_notify/)
 
 # Example of inventory variables
 
