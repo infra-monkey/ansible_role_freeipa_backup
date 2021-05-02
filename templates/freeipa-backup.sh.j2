@@ -13,6 +13,9 @@ BACKUP_DIR={{ freeipa_backup_dir }}
 BACKUP_OPTIONS={{ freeipa_backup_options }}
 MOUNT_TYPE={{ freeipa_backup_mount_type }}
 NB_BACKUPS={{ freeipa_backup_retention }}
+WEBHOOK_NOTIFY={{ freeipa_backup_webhook_notification }}
+WEBHOOK_SCRIPT={{ freeipa_backup_webhook_script }}
+WEBHOOK_URL={{ freeipa_backup_webhook_url }}
 DATE=$(date +%F)
 BACKUP_BASEDIR="$(hostname -f)/freeipa"
 BACKUP_LOCALDIR=/var/lib/ipa/backup
@@ -48,7 +51,7 @@ function exit_script () {
             ;;
     esac
     echo ${EXIT_MSG}
-    #${ROCKETCHAT_SCRIPT} ${ROCKETCHAT_TOKEN} "FAILED" "${0} Failed with error ${EXIT_CODE}\n${EXIT_MSG}"
+    [ "WEBHOOK_NOTIFY" == "true" ] && ${WEBHOOK_SCRIPT} ${WEBHOOK_URL} ":x: FAILED: ${0} on $(hostname -f) failed with error ${EXIT_CODE}\n${EXIT_MSG}"
     exit ${ERR_CODE}
 }
 
@@ -69,7 +72,7 @@ function create_backup_dir () {
 }
 
 function copy_backup () {
-    ERR_CODE=4
+    ERR_CODE=3
 
     if [ "${MOUNT_TYPE}" != "local" ] ; then
         create_backup_dir
@@ -92,7 +95,7 @@ function perform_backup () {
         rm -rf /var/lib/ipa/backup/*
     fi
     echo "starting freeipa backup full"
-    /sbin/ipa-backup ${BACKUP_OPTIONS}
+    /sbin/ipa-backup ${BACKUP_OPTIONS} || return ${ERR_CODE}
     echo "end of freeipa backup"
     return 0
 }
@@ -106,3 +109,5 @@ load_variables
 show_variables
 perform_backup || exit_script $?
 copy_backup ||  exit_script $?
+[ "${WEBHOOK_NOTIFY}" == "true" ] && ${WEBHOOK_SCRIPT} ${WEBHOOK_URL} ":white_check_mark: SUCCESS: ${0} on $(hostname -f) performed successfully"
+exit 0

@@ -6,6 +6,8 @@ This role requires root permissions. It must be called as root. This needs to be
 
 >Use `ipa-restore` to restore those backups. Make sure to set the appropriate options.
 
+>Webhook notifications only support rocketchat for the moment.
+
 # Variables
 
 | Name  | Type | Required | Default Value | Description |
@@ -16,6 +18,9 @@ This role requires root permissions. It must be called as root. This needs to be
 | freeipa_backup_dir | string | no | `/tmp/freeipa_backup` | Path where the backups are sent. Is the mount point in case of network storage. |
 | freeipa_backup_remote_mount_path | string | no | `nfsserver:/path/to/mount` | The remote path of the mount command. Depends on the protocol. |
 | freeipa_backup_options | string | no | `""` | Options to pass to `ipa-backup`, ex: "--data --online" |
+| freeipa_backup_webhook_notification | boolean | no | `false` | Send the result of the backup at the end of execution |
+| freeipa_backup_webhook_url | string | no | n.a. | The url to send the payload to |
+| freeipa_backup_webhook_script | string | no | `/usr/local/bin/webhook-notify.sh`| The path of the webhook script to call (the default value is set for infra_monkey.webhook_notify galaxy role) |
 
 # Example of inventory variables
 
@@ -32,6 +37,9 @@ This role uses the collection based ansible modules which requires:
 This role depends on the ansible collections:
 - ansible.builtin
 - ansible.posix
+
+Default webhook script from ansible galaxy (you can use your own script):
+- infra_monkey.webhook_notify
 
 The role configures **systemd timers**, if your host doesn't use systemd, it will fail.
 
