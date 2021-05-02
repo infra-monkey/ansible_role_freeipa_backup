@@ -6,6 +6,8 @@ This role requires root permissions. It must be called as root. This needs to be
 
 >Use `ipa-restore` to restore those backups. Make sure to set the appropriate options.
 
+>Webhook notifications only support rocketchat for the moment.
+
 # Variables
 
 | Name  | Type | Required | Default Value | Description |
