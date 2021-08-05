@@ -21,6 +21,8 @@ This role requires root permissions. It must be called as root. This needs to be
 | freeipa_backup_webhook_notification | boolean | no | `false` | Send the result of the backup at the end of execution |
 | freeipa_backup_webhook_url | string | no | n.a. | The url to send the payload to |
 | freeipa_backup_webhook_script | string | no | `/usr/local/bin/webhook-notify.sh`| The path of the webhook script to call (the default value is set for infra_monkey.webhook_notify galaxy role) |
+| freeipa_backup_notify_failure_only | boolean | no | `true` | Sending a notification only on failure. |
+
 
 # Example of inventory variables
 
