@@ -6,6 +6,7 @@ freeipa_backup_remote_mount_path: "nfsserver:/path/to/mount"
 freeipa_backup_retention: "14"
 freeipa_backup_periodicity: "OnCalendar=*-*-* 22:00:00"
 freeipa_backup_webhook_notification: false
-freeipa_backup_webhook_url: ""
+freeipa_backup_webhook_hostname: ""
+freeipa_backup_webhook_uri: ""
 freeipa_backup_webhook_script: "/usr/local/bin/webhook-notify.sh"
 freeipa_backup_notify_failure_only: true
