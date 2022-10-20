@@ -9,7 +9,7 @@ defaults:
   run:
     working-directory: 'freeipa_backup'
 jobs:
-  call-workflow-passing-data:
+  call-workflow-molecule:
     uses: infra-monkey/reuseable_workflows/.github/workflows/ansible_role_molecule.yml@main
     with:
-      role_name: 'freeipa_backup'
+      role-name: 'freeipa_backup'
