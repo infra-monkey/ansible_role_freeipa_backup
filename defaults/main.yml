@@ -9,4 +9,3 @@ freeipa_backup_webhook_notification: false
 freeipa_backup_webhook_url: ""
 freeipa_backup_webhook_script: "/usr/local/bin/webhook-notify.sh"
 freeipa_backup_notify_failure_only: true
-...
